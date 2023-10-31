@@ -13,8 +13,8 @@ extension Application {
         }
 
         @usableFromInline
-        internal func pool(for eventLoop: EventLoop) -> RedisConnectionPool {
-            self.application.redisStorage.pool(for: eventLoop, id: self.id)
+        internal func pool(for eventLoop: EventLoop) throws -> RedisConnectionPool {
+            try self.application.redisStorage.pool(for: eventLoop, id: self.id)
         }
     }
 }
@@ -24,8 +24,8 @@ extension Application.Redis: RedisClient {
     public var eventLoop: EventLoop { self.application.eventLoopGroup.next() }
     public var defaultLogger: Logger? { self.application.logger }
 
-    public func logging(to logger: Logger) -> RedisClient {
-        self.application.redis(self.id)
+    public func logging(to logger: Logger) throws -> RedisClient {
+        try self.application.redis(self.id)
             .pool(for: self.eventLoop)
             .logging(to: logger)
     }
@@ -35,12 +35,16 @@ extension Application.Redis: RedisClient {
         eventLoop: EventLoop? = nil,
         logger: Logger? = nil
     ) -> EventLoopFuture<CommandResult> {
-        self.application.redis(self.id)
-            .pool(for: self.eventLoop)
-            .logging(to: self.application.logger)
-            .send(command, eventLoop: eventLoop, logger: logger)
+        do {
+            return try self.application.redis(self.id)
+                .pool(for: self.eventLoop)
+                .logging(to: self.application.logger)
+                .send(command, eventLoop: eventLoop, logger: logger)
+        } catch {
+            return self.eventLoop.makeFailedFuture(error)
+        }
     }
-    
+
     public func subscribe(
         to channels: [RedisChannelName],
         eventLoop: EventLoop? = nil,
@@ -49,19 +53,27 @@ extension Application.Redis: RedisClient {
         onSubscribe subscribeHandler: RedisSubscribeHandler?,
         onUnsubscribe unsubscribeHandler: RedisUnsubscribeHandler?
     ) -> EventLoopFuture<Void> {
-        self.application.redis(self.id)
-            .pubsubClient
-            .logging(to: self.application.logger)
-            .subscribe(to: channels, eventLoop: eventLoop, logger: logger, messageReceiver: receiver, onSubscribe: subscribeHandler, onUnsubscribe: unsubscribeHandler)
+        do {
+            return try self.application.redis(self.id)
+                .pubsubClient()
+                .logging(to: self.application.logger)
+                .subscribe(to: channels, eventLoop: eventLoop, logger: logger, messageReceiver: receiver, onSubscribe: subscribeHandler, onUnsubscribe: unsubscribeHandler)
+        } catch {
+            return self.eventLoop.makeFailedFuture(error)
+        }
     }
-    
+
     public func unsubscribe(from channels: [RedisChannelName], eventLoop: EventLoop? = nil, logger: Logger? = nil) -> EventLoopFuture<Void> {
-        self.application.redis(self.id)
-            .pubsubClient
-            .logging(to: self.application.logger)
-            .unsubscribe(from: channels, eventLoop: eventLoop, logger: logger)
+        do {
+            return try self.application.redis(self.id)
+                .pubsubClient()
+                .logging(to: self.application.logger)
+                .unsubscribe(from: channels, eventLoop: eventLoop, logger: logger)
+        } catch {
+            return self.eventLoop.makeFailedFuture(error)
+        }
     }
-    
+
     public func psubscribe(
         to patterns: [String],
         eventLoop: EventLoop? = nil,
@@ -70,17 +82,25 @@ extension Application.Redis: RedisClient {
         onSubscribe subscribeHandler: RedisSubscribeHandler?,
         onUnsubscribe unsubscribeHandler: RedisUnsubscribeHandler?
     ) -> EventLoopFuture<Void> {
-        self.application.redis(self.id)
-            .pubsubClient
-            .logging(to: self.application.logger)
-            .psubscribe(to: patterns, eventLoop: eventLoop, logger: logger, messageReceiver: receiver, onSubscribe: subscribeHandler, onUnsubscribe: unsubscribeHandler)
+        do {
+            return try self.application.redis(self.id)
+                .pubsubClient()
+                .logging(to: self.application.logger)
+                .psubscribe(to: patterns, eventLoop: eventLoop, logger: logger, messageReceiver: receiver, onSubscribe: subscribeHandler, onUnsubscribe: unsubscribeHandler)
+        } catch {
+            return self.eventLoop.makeFailedFuture(error)
+        }
     }
-    
+
     public func punsubscribe(from patterns: [String], eventLoop: EventLoop? = nil, logger: Logger? = nil) -> EventLoopFuture<Void> {
-        self.application.redis(self.id)
-            .pubsubClient
-            .logging(to: self.application.logger)
-            .punsubscribe(from: patterns, eventLoop: eventLoop, logger: logger)
+        do {
+            return try self.application.redis(self.id)
+                .pubsubClient()
+                .logging(to: self.application.logger)
+                .punsubscribe(from: patterns, eventLoop: eventLoop, logger: logger)
+        } catch {
+            return self.eventLoop.makeFailedFuture(error)
+        }
     }
 }
 
@@ -93,10 +113,14 @@ extension Application.Redis {
     public func withBorrowedConnection<Result>(
         _ operation: @escaping (RedisClient) -> EventLoopFuture<Result>
     ) -> EventLoopFuture<Result> {
-        return self.application.redis(self.id)
+        do {
+            return try self.application.redis(self.id)
             .pool(for: self.eventLoop)
             .leaseConnection {
                 return operation($0.logging(to: self.application.logger))
             }
+        } catch {
+            return self.eventLoop.makeFailedFuture(error)
+        }
     }
 }

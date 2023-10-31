@@ -5,7 +5,7 @@ extension Application.Redis {
         typealias Value = [RedisID: RedisClient]
     }
 
-    var pubsubClient: RedisClient {
+    func pubsubClient() throws -> RedisClient {
         if let existing = self.application.storage[PubSubKey.self]?[self.id] {
             return existing
         } else {
@@ -13,7 +13,7 @@ extension Application.Redis {
             lock.lock()
             defer { lock.unlock() }
 
-            let pool = self.pool(for: self.eventLoop.next())
+            let pool = try self.pool(for: self.eventLoop.next())
 
             if let existingStorage = self.application.storage[PubSubKey.self] {
                 var copy = existingStorage

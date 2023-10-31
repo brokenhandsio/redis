@@ -27,6 +27,10 @@ final class RedisStorage {
         }
     }
 
+    enum RedisStorageError: Error {
+        case invalidRedisID(RedisID)
+    }
+
     init() {
         self.configurations = [:]
         self.pools = [:]
@@ -45,10 +49,11 @@ final class RedisStorage {
         Set(self.configurations.keys)
     }
 
-    func pool(for eventLoop: EventLoop, id redisID: RedisID) -> RedisConnectionPool {
+    func pool(for eventLoop: EventLoop, id redisID: RedisID) throws -> RedisConnectionPool {
         let key = PoolKey(eventLoopKey: eventLoop.key, redisID: redisID)
         guard let pool = pools[key] else {
-            fatalError("No redis found for id \(redisID), or the app may not have finished booting. Also, the eventLoop must be from Application's EventLoopGroup.")
+//            fatalError("No redis found for id \(redisID), or the app may not have finished booting. Also, the eventLoop must be from Application's EventLoopGroup.")
+            throw RedisStorageError.invalidRedisID(redisID)
         }
         return pool
     }

@@ -15,7 +15,7 @@ extension Application.Redis {
             .send(command, eventLoop: eventLoop, logger: logger)
             .get()
     }
-    
+
     public func subscribe(
         to channels: [RedisChannelName],
         eventLoop: EventLoop? = nil,
@@ -25,20 +25,20 @@ extension Application.Redis {
         onUnsubscribe unsubscribeHandler: RedisUnsubscribeHandler?
     ) async throws {
         try await self.application.redis(self.id)
-            .pubsubClient
+            .pubsubClient()
             .logging(to: self.application.logger)
             .subscribe(to: channels, eventLoop: eventLoop, logger: logger, messageReceiver: receiver, onSubscribe: subscribeHandler, onUnsubscribe: unsubscribeHandler)
             .get()
     }
-    
+
     public func unsubscribe(from channels: [RedisChannelName], eventLoop: EventLoop?, logger: Logger?) async throws {
         try await self.application.redis(self.id)
-            .pubsubClient
+            .pubsubClient()
             .logging(to: self.application.logger)
             .unsubscribe(from: channels, eventLoop: eventLoop, logger: logger)
             .get()
     }
-    
+
     public func psubscribe(
         to patterns: [String],
         eventLoop: EventLoop? = nil,
@@ -48,15 +48,15 @@ extension Application.Redis {
         onUnsubscribe unsubscribeHandler: RedisUnsubscribeHandler?
     ) async throws {
         try await self.application.redis(self.id)
-            .pubsubClient
+            .pubsubClient()
             .logging(to: self.application.logger)
             .psubscribe(to: patterns, eventLoop: eventLoop, logger: logger, messageReceiver: receiver, onSubscribe: subscribeHandler, onUnsubscribe: unsubscribeHandler)
             .get()
     }
-    
+
     public func punsubscribe(from patterns: [String], eventLoop: EventLoop? = nil, logger: Logger? = nil) async throws {
         try await self.application.redis(self.id)
-            .pubsubClient
+            .pubsubClient()
             .logging(to: self.application.logger)
             .punsubscribe(from: patterns, eventLoop: eventLoop, logger: logger)
             .get()
@@ -79,7 +79,7 @@ extension RedisClient {
     {
         try await self.set(key, to: JSONEncoder().encode(entity)).get()
     }
-    
+
     /// Sets key to an encodable item with an expiration time.
     public func setex<E>(_ key: RedisKey, toJSON entity: E, expirationInSeconds expiration: Int) async throws
         where E: Encodable
@@ -101,7 +101,7 @@ extension Request.Redis {
             .send(command, eventLoop: eventLoop, logger: logger)
             .get()
     }
-    
+
     public func subscribe(
         to channels: [RedisChannelName],
         eventLoop: EventLoop? = nil,
@@ -111,20 +111,20 @@ extension Request.Redis {
         onUnsubscribe unsubscribeHandler: RedisUnsubscribeHandler?
     ) async throws {
         try await self.request.application.redis(self.id)
-            .pubsubClient
+            .pubsubClient()
             .logging(to: self.request.logger)
             .subscribe(to: channels, eventLoop: eventLoop, logger: logger, messageReceiver: receiver, onSubscribe: subscribeHandler, onUnsubscribe: unsubscribeHandler)
             .get()
     }
-    
+
     public func unsubscribe(from channels: [RedisChannelName], eventLoop: EventLoop? = nil, logger: Logger? = nil) async throws {
         try await self.request.application.redis(self.id)
-            .pubsubClient
+            .pubsubClient()
             .logging(to: self.request.logger)
             .unsubscribe(from: channels, eventLoop: eventLoop, logger: logger)
             .get()
     }
-    
+
     public func psubscribe(
         to patterns: [String],
         eventLoop: EventLoop? = nil,
@@ -134,15 +134,15 @@ extension Request.Redis {
         onUnsubscribe unsubscribeHandler: RedisUnsubscribeHandler?
     ) async throws {
         try await self.request.application.redis(self.id)
-            .pubsubClient
+            .pubsubClient()
             .logging(to: self.request.logger)
             .psubscribe(to: patterns, eventLoop: eventLoop, logger: logger, messageReceiver: receiver, onSubscribe: subscribeHandler, onUnsubscribe: unsubscribeHandler)
             .get()
     }
-    
+
     public func punsubscribe(from patterns: [String], eventLoop: EventLoop? = nil, logger: Logger? = nil) async throws {
         try await self.request.application.redis(self.id)
-            .pubsubClient
+            .pubsubClient()
             .logging(to: self.request.logger)
             .punsubscribe(from: patterns, eventLoop: eventLoop, logger: logger)
             .get()
